@@ -602,3 +602,14 @@ async def test_connect_timeout_streaks_evict_the_least_recently_used(
     # count, so an eviction that silently reset it could not slip through.
     expected = 1 + MAX_TRACKED_UNANSWERED_CONNECTS * 2 + 1
     assert bluetooth_device.async_note_connect_timeout(still_failing) == expected
+
+
+@pytest.mark.asyncio
+async def test_set_unavailable_clears_connect_streaks(
+    bluetooth_device: ESPHomeBluetoothDevice,
+) -> None:
+    """A dead session's streaks must not survive into the next one."""
+    bluetooth_device.async_note_connect_timeout(ADDRESS)
+    bluetooth_device.async_note_connect_timeout(ADDRESS)
+    bluetooth_device.async_set_unavailable()
+    assert bluetooth_device.async_note_connect_timeout(ADDRESS) == 1
